@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Murdock Email Builder Pro</title>
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#fff; --text:#17191d; --muted:#6a707a;
+  --line:#d9dde3; --accent:#175cd3; --danger:#b42318;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+header{padding:22px 28px;background:#111827;color:#fff}
+header h1{margin:0 0 5px;font-size:24px}
+header p{margin:0;color:#cbd5e1;font-size:14px}
+main{display:grid;grid-template-columns:minmax(390px,520px) 1fr;gap:20px;padding:20px;min-height:calc(100vh - 88px)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.form-panel{padding:20px;overflow:auto;max-height:calc(100vh - 128px)}
+.preview-panel{display:flex;flex-direction:column;min-width:0}
+.preview-toolbar{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.preview-wrap{flex:1;background:#e5e7eb;padding:18px;overflow:auto}
+iframe{display:block;width:100%;max-width:660px;height:900px;margin:0 auto;border:0;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+section{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
+section:first-of-type{border-top:0;padding-top:0;margin-top:0}
+h2{font-size:17px;margin:0 0 14px}
+label{display:block;font-size:12px;font-weight:700;margin:12px 0 6px}
+input,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+textarea{min-height:90px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.offer-card{border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0;background:#fafafa}
+.offer-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.offer-head h3{margin:0;font-size:15px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button{border:0;border-radius:8px;padding:10px 13px;font-weight:700;cursor:pointer}
+.primary{background:var(--accent);color:#fff}
+.secondary{background:#eef2f7;color:#111827}
+.danger{background:#fee4e2;color:var(--danger)}
+.small{padding:7px 9px;font-size:12px}
+.note{font-size:12px;color:var(--muted);line-height:1.45}
+.file-name{font-size:12px;color:var(--muted);margin-top:5px}
+.sticky-actions{position:sticky;bottom:-20px;background:linear-gradient(to top,#fff 78%,rgba(255,255,255,0));padding:28px 0 2px;margin-top:16px}
+@media(max-width:980px){
+  main{grid-template-columns:1fr}
+  .form-panel{max-height:none}
+  iframe{height:760px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Murdock Email Builder Pro</h1>
+  <p>Add as many offer panels as needed, preview the email, and export finished HTML.</p>
+</header>
+
+<main>
+  <div class="panel form-panel">
+    <section>
+      <h2>Email details</h2>
+      <label>Email title</label>
+      <input id="emailTitle" value="Murdock Hyundai Lindon Monthly Offers">
+      <label>Inbox preview text</label>
+      <input id="preheader" value="Monthly offers at Murdock Hyundai Lindon.">
+      <label>Public image folder URL</label>
+      <input id="baseUrl" value="https://tannercapua-hub.github.io/email-assets/2026/july">
+      <p class="note">This should be the GitHub Pages folder containing the uploaded images. Do not add a trailing slash.</p>
+    </section>
+
+    <section>
+      <h2>Header</h2>
+      <label>Image filename</label>
+      <input id="headerFile" value="header-600.png">
+      <label>Click-through link</label>
+      <input id="headerLink" value="https://www.murdockhyundailindon.com">
+      <label>Alt text</label>
+      <input id="headerAlt" value="Murdock Hyundai of Lindon">
+      <label>Local preview image</label>
+      <input id="headerLocal" type="file" accept="image/*">
+      <div id="headerLocalName" class="file-name"></div>
+    </section>
+
+    <section>
+      <div class="offer-head">
+        <h2 style="margin:0">Offers</h2>
+        <button class="primary small" id="addOffer">+ Add offer</button>
+      </div>
+      <div id="offers"></div>
+    </section>
+
+    <section>
+      <h2>Footer</h2>
+      <label>Image filename</label>
+      <input id="footerFile" value="footer-600.png">
+      <label>Click-through link</label>
+      <input id="footerLink" value="tel:8014373770">
+      <label>Alt text</label>
+      <input id="footerAlt" value="Murdock Hyundai of Lindon | 530 S Lindon Park Dr. Lindon UT 84042 | 801-437-3770">
+      <label>Local preview image</label>
+      <input id="footerLocal" type="file" accept="image/*">
+      <div id="footerLocalName" class="file-name"></div>
+    </section>
+
+    <div class="sticky-actions actions">
+      <button class="primary" id="refreshPreview">Refresh preview</button>
+      <button class="secondary" id="downloadHtml">Download finished HTML</button>
+      <button class="secondary" id="saveProject">Save project JSON</button>
+      <label class="secondary" style="display:inline-flex;align-items:center;margin:0;cursor:pointer">
+        Load project JSON
+        <input id="loadProject" type="file" accept=".json,application/json" style="display:none">
+      </label>
+    </div>
+  </div>
+
+  <div class="panel preview-panel">
+    <div class="preview-toolbar">
+      <strong>Live preview</strong>
+      <span class="note">Local uploaded images are used in preview only.</span>
+    </div>
+    <div class="preview-wrap"><iframe id="preview"></iframe></div>
+  </div>
+</main>
+
+<script>
+let offers = [];
+let nextOfferId = 1;
+const localImages = {header:null, footer:null, offers:{}};
+
+function escapeHtml(s=''){
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function joinUrl(base, file){
+  return base.replace(/\/+$/,'') + '/' + file.replace(/^\/+/,'');
+}
+function addOffer(data={}){
+  const offer = {
+    id: nextOfferId++,
+    filename: data.filename || `image-${offers.length+1}-600.jpg`,
+    link: data.link || 'https://www.murdockhyundailindon.com',
+    alt: data.alt || `Offer ${offers.length+1}`,
+    disclaimer: data.disclaimer || ''
+  };
+  offers.push(offer);
+  renderOffers();
+  refreshPreview();
+}
+function removeOffer(id){
+  offers = offers.filter(o => o.id !== id);
+  delete localImages.offers[id];
+  renderOffers();
+  refreshPreview();
+}
+function moveOffer(id, delta){
+  const i = offers.findIndex(o=>o.id===id);
+  const ni = i + delta;
+  if(i < 0 || ni < 0 || ni >= offers.length) return;
+  [offers[i],offers[ni]]=[offers[ni],offers[i]];
+  renderOffers();
+  refreshPreview();
+}
+function renderOffers(){
+  const wrap = document.getElementById('offers');
+  wrap.innerHTML = '';
+  offers.forEach((o,index)=>{
+    const el = document.createElement('div');
+    el.className='offer-card';
+    el.innerHTML = `
+      <div class="offer-head">
+        <h3>Offer ${index+1}</h3>
+        <div class="actions">
+          <button class="secondary small" data-up="${o.id}">↑</button>
+          <button class="secondary small" data-down="${o.id}">↓</button>
+          <button class="danger small" data-remove="${o.id}">Remove</button>
+        </div>
+      </div>
+      <label>Image filename</label>
+      <input data-field="filename" data-id="${o.id}" value="${escapeHtml(o.filename)}">
+      <label>Click-through link</label>
+      <input data-field="link" data-id="${o.id}" value="${escapeHtml(o.link)}">
+      <label>Alt text</label>
+      <input data-field="alt" data-id="${o.id}" value="${escapeHtml(o.alt)}">
+      <label>Disclaimer</label>
+      <textarea data-field="disclaimer" data-id="${o.id}">${escapeHtml(o.disclaimer)}</textarea>
+      <label>Local preview image</label>
+      <input data-file="${o.id}" type="file" accept="image/*">
+      <div class="file-name">${localImages.offers[o.id]?.name || ''}</div>
+    `;
+    wrap.appendChild(el);
+  });
+
+  wrap.querySelectorAll('[data-field]').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      const o = offers.find(x=>x.id===Number(e.target.dataset.id));
+      o[e.target.dataset.field] = e.target.value;
+    });
+  });
+  wrap.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>removeOffer(Number(b.dataset.remove)));
+  wrap.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveOffer(Number(b.dataset.up),-1));
+  wrap.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveOffer(Number(b.dataset.down),1));
+  wrap.querySelectorAll('[data-file]').forEach(inp=>{
+    inp.onchange = e=>{
+      const id = Number(e.target.dataset.file);
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        localImages.offers[id] = {name:file.name, data:ev.target.result};
+        renderOffers();
+        refreshPreview();
+      };
+      reader.readAsDataURL(file);
+    };
+  });
+}
+function getData(){
+  return {
+    emailTitle: document.getElementById('emailTitle').value,
+    preheader: document.getElementById('preheader').value,
+    baseUrl: document.getElementById('baseUrl').value,
+    header:{
+      filename:document.getElementById('headerFile').value,
+      link:document.getElementById('headerLink').value,
+      alt:document.getElementById('headerAlt').value
+    },
+    offers:offers.map(({id,...rest})=>rest),
+    footer:{
+      filename:document.getElementById('footerFile').value,
+      link:document.getElementById('footerLink').value,
+      alt:document.getElementById('footerAlt').value
+    }
+  };
+}
+function emailHtml(useLocal=false){
+  const d=getData();
+  const imageSrc=(kind,obj,id)=>{
+    if(useLocal){
+      if(kind==='header' && localImages.header) return localImages.header.data;
+      if(kind==='footer' && localImages.footer) return localImages.footer.data;
+      if(kind==='offer' && localImages.offers[id]) return localImages.offers[id].data;
+    }
+    return joinUrl(d.baseUrl,obj.filename);
+  };
+  const offerRows = offers.map(o=>`
+<tr><td align="center" style="padding:0;margin:0;line-height:0;font-size:0;">
+<a href="${escapeHtml(o.link)}" target="_blank" style="display:block;text-decoration:none;">
+<img src="${imageSrc('offer',o,o.id)}" alt="${escapeHtml(o.alt)}" width="600" class="fluid" style="display:block;width:100%;max-width:600px;height:auto;">
+</a></td></tr>
+${o.disclaimer.trim()?`<tr><td style="padding:5px 11px 9px;background:#fff;font-family:Arial,Helvetica,sans-serif;font-size:7px;line-height:8.4px;color:#000;text-align:left;">${escapeHtml(o.disclaimer)}</td></tr>`:''}
+`).join('');
+
+return `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>${escapeHtml(d.emailTitle)}</title>
+<style type="text/css">
+body,table,td,p,a,li{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
+table,td{mso-table-lspace:0pt;mso-table-rspace:0pt}
+img{-ms-interpolation-mode:bicubic;border:0;height:auto;line-height:100%;outline:none;text-decoration:none;display:block}
+body{margin:0;padding:0;width:100%!important;min-width:100%!important;background-color:#efefef}
+@media only screen and (max-width:620px){.container{width:100%!important}.fluid{width:100%!important;max-width:100%!important;height:auto!important}.pad{padding-left:12px!important;padding-right:12px!important}}
+</style></head>
+<body style="margin:0;padding:0;background-color:#efefef;">
+<div style="display:none;font-size:1px;color:#efefef;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escapeHtml(d.preheader)}</div>
+<table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background-color:#efefef;">
+<tr><td align="center" class="pad" style="padding:18px 12px;">
+<table role="presentation" width="600" border="0" cellspacing="0" cellpadding="0" class="container" style="width:600px;max-width:600px;border-collapse:collapse;background-color:#fff;">
+<tr><td align="center" style="padding:0;margin:0;line-height:0;font-size:0;">
+<a href="${escapeHtml(d.header.link)}" target="_blank" style="display:block;text-decoration:none;">
+<img src="${imageSrc('header',d.header)}" alt="${escapeHtml(d.header.alt)}" width="600" class="fluid" style="display:block;width:100%;max-width:600px;height:auto;">
+</a></td></tr>
+${offerRows}
+<tr><td align="center" style="padding:0;margin:0;line-height:0;font-size:0;">
+<a href="${escapeHtml(d.footer.link)}" style="display:block;text-decoration:none;">
+<img src="${imageSrc('footer',d.footer)}" alt="${escapeHtml(d.footer.alt)}" width="600" class="fluid" style="display:block;width:100%;max-width:600px;height:auto;">
+</a></td></tr>
+</table></td></tr></table>
+</body></html>`;
+}
+function refreshPreview(){
+  document.getElementById('preview').srcdoc=emailHtml(true);
+}
+function download(name,content,type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+document.getElementById('addOffer').onclick=()=>addOffer();
+document.getElementById('refreshPreview').onclick=refreshPreview;
+document.getElementById('downloadHtml').onclick=()=>download('murdock-email-ready.html',emailHtml(false),'text/html');
+document.getElementById('saveProject').onclick=()=>download('murdock-email-project.json',JSON.stringify(getData(),null,2),'application/json');
+document.getElementById('loadProject').onchange=e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      document.getElementById('emailTitle').value=d.emailTitle||'';
+      document.getElementById('preheader').value=d.preheader||'';
+      document.getElementById('baseUrl').value=d.baseUrl||'';
+      document.getElementById('headerFile').value=d.header?.filename||'';
+      document.getElementById('headerLink').value=d.header?.link||'';
+      document.getElementById('headerAlt').value=d.header?.alt||'';
+      document.getElementById('footerFile').value=d.footer?.filename||'';
+      document.getElementById('footerLink').value=d.footer?.link||'';
+      document.getElementById('footerAlt').value=d.footer?.alt||'';
+      offers=[]; localImages.offers={};
+      (d.offers||[]).forEach(addOffer);
+      renderOffers();refreshPreview();
+    }catch(err){alert('That project file could not be loaded.');}
+  };
+  reader.readAsText(file);
+};
+function setupLocal(inputId,key,nameId){
+  document.getElementById(inputId).onchange=e=>{
+    const file=e.target.files[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      localImages[key]={name:file.name,data:ev.target.result};
+      document.getElementById(nameId).textContent=file.name;
+      refreshPreview();
+    };
+    reader.readAsDataURL(file);
+  };
+}
+setupLocal('headerLocal','header','headerLocalName');
+setupLocal('footerLocal','footer','footerLocalName');
+
+addOffer({filename:'image-1-600.jpg',alt:'Offer 1'});
+addOffer({filename:'image-2-600.jpg',alt:'Offer 2'});
+</script>
+</body>
+</html>
